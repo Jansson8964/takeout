@@ -52,7 +52,7 @@ public class UserController {
             session.setAttribute(email, code);
             return R.success("验证码发送成功，请及时查看!");
         }
-        return R.error("验证码发送失败，请重新输入!");
+        return R.error("验证码发送异常，请重新发送");
     }
 
     /**
@@ -66,7 +66,7 @@ public class UserController {
     public R<User> login(@RequestBody Map map, HttpSession session) {
         log.info(map.toString());
 
-        //获取手机号
+        //获取邮箱号
         String phone = map.get("phone").toString();
 
         //获取验证码
@@ -81,7 +81,6 @@ public class UserController {
         //进行验证码的比对（页面提交的验证码和Session中保存的验证码比对）
         if (codeInSession != null && codeInSession.equals(code)) {
             //如果能够比对成功，说明登录成功
-
             LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
             queryWrapper.eq(User::getPhone, phone);
             //获得唯一的用户，因为手机号是唯一的
