@@ -3,15 +3,18 @@ package com.mashang.reggie.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mashang.reggie.common.R;
+import com.mashang.reggie.dto.DishDto;
 import com.mashang.reggie.dto.SetmealDto;
 import com.mashang.reggie.entity.Category;
+import com.mashang.reggie.entity.Dish;
 import com.mashang.reggie.entity.Setmeal;
+import com.mashang.reggie.entity.SetmealDish;
 import com.mashang.reggie.service.CategoryService;
+import com.mashang.reggie.service.DishService;
 import com.mashang.reggie.service.SetmealDishService;
 import com.mashang.reggie.service.SetmealService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
-import org.apache.ibatis.annotations.Select;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -32,6 +35,8 @@ public class SetmealController {
     private SetmealDishService setmealDishService;
     @Autowired
     private CategoryService categoryService;
+    @Autowired
+    private DishService dishService;
 
     /**
      * 保存套餐
@@ -117,8 +122,57 @@ public class SetmealController {
     @DeleteMapping
     // 注解@RequestParam接收的参数是来自requestHeader中，即请求头
     public R<String> delete(@RequestParam List<Long> ids) {
-        log.info("ids:{}",ids);
+        log.info("ids:{}", ids);
         setmealService.removeWithDish(ids);
         return R.success("套餐数据删除成功");
+    }
+
+    /**
+     * 启售停售功能
+     * 批量启售批量停售
+     */
+    @PostMapping("/status/{status}")
+    public R<String> status(@PathVariable("status") Integer status, @RequestParam List<Long> ids) {
+        setmealService.updateSetmealStatusById(status, ids);
+        return R.success("修改售卖状态成功!");
+    }
+
+    @GetMapping("/list")
+    public R<List<Setmeal>> list(Setmeal setmeal) {
+        // 构造查询条件
+        LambdaQueryWrapper<Setmeal> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(setmeal.getCategoryId() != null, Setmeal::getCategoryId, setmeal.getCategoryId());
+        lambdaQueryWrapper.eq(Setmeal::getStatus, 1);
+        lambdaQueryWrapper.orderByDesc(Setmeal::getUpdateTime);
+        List<Setmeal> list = setmealService.list(lambdaQueryWrapper);
+        return R.success(list);
+    }
+
+    /**
+     * 移动端点击套餐图片查看套餐具体内容
+     * 这里返回的是dto 对象，因为前端需要copies这个属性
+     * 前端主要要展示的信息是:套餐中菜品的基本信息，图片，菜品描述，以及菜品的份数
+     *
+     * @param SetmealId
+     * @return
+     */
+    @GetMapping("/dish/{id}")
+    public R<List<DishDto>> dish(@PathVariable("id") Long SetmealId) {
+        LambdaQueryWrapper<SetmealDish> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(SetmealDish::getSetmealId, SetmealId);
+
+        List<SetmealDish> list = setmealDishService.list(lambdaQueryWrapper);
+
+        List<DishDto> dishDtos = list.stream().map((setmealDish) -> {
+            DishDto dishDto = new DishDto();
+            //其实这个BeanUtils的拷贝是浅拷贝，这里要注意一下
+            BeanUtils.copyProperties(setmealDish, dishDto);
+            //这里是为了把套餐中的菜品的基本信息填充到dto中，比如菜品描述，菜品图片等菜品的基本信息
+            Long dishId = setmealDish.getDishId();
+            Dish dish = dishService.getById(dishId);
+            BeanUtils.copyProperties(dish, dishDto);
+            return dishDto;
+        }).collect(Collectors.toList());
+        return R.success(dishDtos);
     }
 }

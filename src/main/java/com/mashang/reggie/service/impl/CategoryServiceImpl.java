@@ -10,7 +10,6 @@ import com.mashang.reggie.mapper.CategoryMapper;
 import com.mashang.reggie.service.CategoryService;
 import com.mashang.reggie.service.DishService;
 import com.mashang.reggie.service.SetmealService;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

@@ -2,7 +2,6 @@ package com.mashang.reggie.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import com.mashang.reggie.common.BaseContext;
 import com.mashang.reggie.common.R;

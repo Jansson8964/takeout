@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mashang.reggie.common.CustomException;
 import com.mashang.reggie.dto.SetmealDto;
-import com.mashang.reggie.entity.DishFlavor;
 import com.mashang.reggie.entity.Setmeal;
 import com.mashang.reggie.entity.SetmealDish;
 import com.mashang.reggie.mapper.SetmealMapper;
@@ -108,6 +107,27 @@ public class SetmealServiceImpl extends ServiceImpl<SetmealMapper, Setmeal> impl
         lambdaQueryWrapper1.in(SetmealDish::getSetmealId, ids);
         setmealService.remove(lambdaQueryWrapper);
 
+    }
+
+    /**
+     * 更改套餐的售卖状态(单独更改/批量更改)
+     *
+     * @param status
+     * @param ids
+     */
+
+    @Override
+    public void updateSetmealStatusById(Integer status, List<Long> ids) {
+        LambdaQueryWrapper<Setmeal> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.in(ids != null, Setmeal::getId, ids);
+        List<Setmeal> list = setmealService.list(lambdaQueryWrapper);
+        for (Setmeal setmeal : list) {
+            if (setmeal != null) {
+                setmeal.setStatus(status);
+                // 修改状态是更新语句,要用update!!!
+                setmealService.updateById(setmeal);
+            }
+        }
     }
 }
 

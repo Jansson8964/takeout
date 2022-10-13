@@ -4,7 +4,7 @@
         <meta charset="UTF-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0,user-scalable=no,minimal-ui">
-        <title>菩提阁</title>
+        <title>莆院餐厅</title>
         <link rel="icon" href="./../images/favico.ico">
         <!--不同屏幕尺寸根字体设置-->
         <script src="./../js/base.js"></script>
@@ -21,12 +21,12 @@
         <div id="add_order" class="app">
             <div class="divHead">
                 <div class="divTitle">
-                    <i class="el-icon-arrow-left" @click="goBack"></i>菩提阁
+                    <i class="el-icon-arrow-left" @click="goBack"></i>莆院餐厅
                 </div>
             </div>
             <div class="divContent">
                 <div class="divAddress">
-                    <div @click="toAddressPage">                    
+                    <div @click="toAddressPage">
                         <div class="address">{{address.detail}}</div>
                         <div class="name">
                             <span>{{address.consignee}}{{address.sex === '1' ? '先生':'女士'}}</span>
@@ -87,7 +87,7 @@
         <!-- 引入组件库 -->
         <script src="../../backend/plugins/element-ui/index.js"></script>
         <!-- 引入vant样式 -->
-        <script src="./../js/vant.min.js"></script>      
+        <script src="./../js/vant.min.js"></script>
         <script src="./../api/address.js"></script>
         <!-- 引入axios -->
         <script src="../../backend/plugins/axios/axios.min.js"></script>
@@ -116,7 +116,7 @@
                     goodsNum(){
                         let num = 0
                         this.cartData.forEach(item=>{
-                            num += item.number 
+                            num += item.number
                         })
                         if(num <99){
                             return num

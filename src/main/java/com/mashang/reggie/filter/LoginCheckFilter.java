@@ -56,7 +56,7 @@ public class LoginCheckFilter implements Filter {
 
         // 3.如果不需要处理,则直接放行
         if (check) {
-            log.info("拦截到请求:{}", request.getRequestURI());
+            log.info("放行请求:{}", request.getRequestURI());
             filterChain.doFilter(request, response);
             return;
         }

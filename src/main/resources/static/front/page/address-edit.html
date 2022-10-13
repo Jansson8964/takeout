@@ -4,7 +4,7 @@
         <meta charset="UTF-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0,user-scalable=no,minimal-ui">
-        <title>菩提阁</title>
+        <title>莆院餐厅</title>
         <link rel="icon" href="./../images/favico.ico">
         <!--不同屏幕尺寸根字体设置-->
         <script src="./../js/base.js"></script>
@@ -26,7 +26,7 @@
             </div>
             <div class="divContent">
                 <div class="divItem">
-                   <span>联系人：</span> 
+                   <span>联系人：</span>
                    <el-input placeholder=" 请填写收货人的姓名" v-model="form.consignee"  maxlength='10' class="inputUser"/></el-input>
                    <span class="spanChecked" @click="form.sex = '1'">
                     <i :class="{iActive:form.sex === '1'}"></i>
@@ -38,15 +38,15 @@
                 </span>
                 </div>
                 <div class="divItem">
-                    <span>手机号：</span> 
+                    <span>手机号：</span>
                     <el-input placeholder=" 请填写收货人手机号码" v-model="form.phone"  maxlength='20' style="width: calc(100% - 80rem);"/></el-input>
                 </div>
                 <div class="divItem">
-                    <span>收货地址：</span> 
+                    <span>收货地址：</span>
                     <el-input placeholder=" 请输入收货地址" v-model="form.detail"  maxlength='140'/></el-input>
                 </div>
                 <div class="divItem ">
-                    <span>标签：</span> 
+                    <span>标签：</span>
                     <span v-for="(item,index) in labelList" :key="index" @click="form.label = item;activeIndex = index" :class="{spanItem:true,spanActiveSchool:activeIndex === index}">{{item}}</span>
                 </div>
                 <div class="divSave" @click="saveAddress">保存地址</div>
@@ -58,7 +58,7 @@
         <!-- 引入组件库 -->
         <script src="../../backend/plugins/element-ui/index.js"></script>
         <!-- 引入vant样式 -->
-        <script src="./../js/vant.min.js"></script>       
+        <script src="./../js/vant.min.js"></script>
         <script src="./../js/common.js"></script>
         <script src="./../api/address.js"></script>
         <!-- 引入axios -->
@@ -111,20 +111,20 @@
                         const form = this.form
                         if(!form.consignee){
                             this.$notify({ type:'warning', message:'请输入联系人'});
-                            return 
+                            return
                         }
                         if(!form.phone){
                             this.$notify({ type:'warning', message:'请输入手机号'});
-                            return 
+                            return
                         }
                         if(!form.detail){
                             this.$notify({ type:'warning', message:'请输入收货地址'});
-                            return 
+                            return
                         }
                         const reg = /^1[3|4|5|7|8][0-9]{9}$/
                         if(!reg.test(form.phone)){
                             this.$notify({ type:'warning', message:'手机号码不合法'});
-                            return  
+                            return
                         }
                         let res= {}
                         if(this.id){
@@ -132,7 +132,7 @@
                         }else{
                             res = await addAddressApi(this.form)
                         }
-                        
+
                         if(res.code === 1){
                             window.requestAnimationFrame(()=>{
                                 window.location.replace('/front/page/address.html')

@@ -2,18 +2,19 @@ package com.mashang.reggie.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mashang.reggie.common.BaseContext;
 import com.mashang.reggie.common.CustomException;
+import com.mashang.reggie.dto.OrdersDto;
 import com.mashang.reggie.entity.*;
 import com.mashang.reggie.mapper.OrderMapper;
 import com.mashang.reggie.service.*;
-import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -35,6 +36,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Orders> implement
 
     @Autowired
     private OrderDetailService orderDetailService;
+
+    @Autowired
+    private OrderService orderService;
 
     /**
      * 下单功能,一共操作了三张表,1.向订单表插入数据 2.向订单明细表插入数据 3.清空购物车表的数据
@@ -114,5 +118,67 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Orders> implement
         orderDetailService.saveBatch(orderDetails);
         // 5.清空购物车数据
         shoppingCartService.remove(lambdaQueryWrapper);
+    }
+
+    /**
+     * 分页查询以及左上角的查询详细信息
+     *
+     * @param page
+     * @param pageSize
+     * @param number
+     * @param beginTime
+     * @param endTime
+     * @return
+     */
+
+    @Override
+    public Page<OrdersDto> page(int page, int pageSize, String number, String beginTime, String endTime) {
+        // 1.构造分页构造器对象,泛型指定为实体
+        // protected List<T> records;
+        Page<Orders> pageInfo = new Page<>(page, pageSize);
+        Page<OrdersDto> ordersDtoPage = new Page<>();
+        LambdaQueryWrapper<Orders> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        // 添加过滤条件
+        // number为订单号,不是数量,这里number用like进行模糊查询
+        // 阿帕奇的stringUtils才有isNotEmpty方法
+        lambdaQueryWrapper.like(number != null, Orders::getNumber, number);
+        // 把方法的参数传进isNotEmpty里面判断
+        lambdaQueryWrapper.gt(StringUtils.isNotEmpty(beginTime), Orders::getOrderTime, beginTime);
+        lambdaQueryWrapper.lt(StringUtils.isNotEmpty(endTime), Orders::getOrderTime, endTime);
+        // 根据下单时间降序排序
+        lambdaQueryWrapper.orderByDesc(Orders::getOrderTime);
+        orderService.page(pageInfo, lambdaQueryWrapper);
+        // 将除了records以外的属性都复制到dto
+        BeanUtils.copyProperties(pageInfo, ordersDtoPage, "records");
+        List<Orders> records = pageInfo.getRecords();
+        List<OrdersDto> collect = records.stream().map((item) -> {
+            OrdersDto ordersDto = new OrdersDto();
+            BeanUtils.copyProperties(item, ordersDto);
+            LambdaQueryWrapper<OrderDetail> orderDetailLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            // 根据订单id查询订单详细信息
+            orderDetailLambdaQueryWrapper.eq(OrderDetail::getOrderId, item.getId());
+            List<OrderDetail> orderDetails = orderDetailService.list(orderDetailLambdaQueryWrapper);
+            ordersDto.setOrderDetails(orderDetails);
+
+            // 获取用户的手机号和userName
+            // 根据userId来查询
+            Long userId = item.getUserId();
+            User user = userService.getById(userId);
+            ordersDto.setUserName(user.getName());
+            ordersDto.setAddress(user.getPhone());
+
+            // 根据AddressId查询住址和收货人
+            Long addressBookId = item.getAddressBookId();
+            AddressBook addressBook = addressBookService.getById(addressBookId);
+            ordersDto.setConsignee(addressBook.getConsignee());
+            // detail为详细地址
+            ordersDto.setAddress(addressBook.getDetail());
+
+            return ordersDto;
+        }).collect(Collectors.toList());
+
+        ordersDtoPage.setRecords(collect);
+        return ordersDtoPage;
+
     }
 }

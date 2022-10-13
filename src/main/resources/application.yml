@@ -1,17 +1,22 @@
 server:
-  port: 8080
+  port: 8964
 spring:
   main:
     allow-circular-references: true
   application:
     # 应用的名称,可选,默认为项目名
-    name: reggie
+    name: takeout
   datasource:
     druid:
       driver-class-name: com.mysql.cj.jdbc.Driver
-      url: jdbc:mysql://localhost:3306/reggie?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
+      url: jdbc:mysql://localhost:3306/takeout?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
       username: root
       password: 1234
+
+#  这样启动不会报错,swagger相关
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
   # 邮箱配置
   mail:
     host: smtp.qq.com  # 发送邮件的服务器地址
@@ -48,4 +53,8 @@ mybatis-plus:
       id-type: ASSIGN_ID
 # 自定义路径
 reggie:
-  path: C:\Users\Freeman\Desktop\picture2\
+  path: C:\Users\Freeman\Desktop\picture3\
+
+
+
+

@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>瑞吉外卖管理端</title>
+    <title>莆院外卖管理端</title>
     <link rel="shortcut icon" href="../../favicon.ico">
     <!-- 引入样式 -->
     <link rel="stylesheet" href="../../plugins/element-ui/index.css"/>
@@ -26,7 +26,7 @@
         <div class="login-form">
             <el-form ref="loginForm" :model="loginForm" :rules="loginRules">
                 <div class="login-form-title">
-                    <img src="../../images/login/logo.png" style="width:139px;height:42px;" alt=""/>
+<!--                    <img src="../../images/login/logo.png" style="width:139px;height:42px;" alt=""/>-->
                 </div>
                 <el-form-item prop="username">
                     <el-input v-model="loginForm.username" type="text" auto-complete="off" placeholder="账号"
@@ -62,8 +62,8 @@
 
 <script>
     new Vue({
-        el: '#login-app',  //指定唯一标识
-        data() {
+        el: '#login-app',  //指定唯一标识,这个标识在上面有个div <div class="login" id="login-app">
+        data() { //data是我们用到的一些表单数据
             return {
                 loginForm: {
                     username: 'admin',
@@ -96,16 +96,19 @@
         },
         created() {
         },
+        /**
+         * 前端从返回结果里获得code，data，msg，
+         */
         methods: {
-            async handleLogin() {
-                this.$refs.loginForm.validate(async (valid) => {
+            async handleLogin() { //handeleLogin方法 当我们点击登录按钮的时候就会调用
+                this.$refs.loginForm.validate(async (valid) => { // 通过refs.loginForm找到表单,调用validate做校验
                     if (valid) {
-                        this.loading = true
-                        let res = await loginApi(this.loginForm)
-                        if (String(res.code) === '1') {// 1.表示登陆成功
-                            localStorage.setItem('userInfo', JSON.stringify(res.data))  //localstorage保存在浏览器当中
-                            window.location.href = '/backend/index.html'
-                        } else {
+                        this.loading = true // 如果校验通过，吧loading改成true，前端页面登录按钮会变成登录中, <span v-else>登录中...</span>
+                        let res = await loginApi(this.loginForm) // loginApi方法被封装在了一个js文件里，loginform放的就是用户名和密码
+                        if (String(res.code) === '1') {// 1.表示登陆成功 //结果通过res接收，1表示登录成功
+                            localStorage.setItem('userInfo', JSON.stringify(res.data))  //localstorage：将相应的数据data转为json并保存在浏览器当中，用key-value形式将数据保存，key为userInfo ,value为已经转为json形式的res.data
+                            window.location.href = '/backend/index.html' // 然后做一个跳转，将页面跳转至backend/index.html
+                        } else { // 登录失败 提示错误信息
                             this.$message.error(res.msg)
                             this.loading = false
                         }

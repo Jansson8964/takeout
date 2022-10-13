@@ -4,7 +4,7 @@
         <meta charset="UTF-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0,user-scalable=no,minimal-ui">
-        <title>菩提阁</title>
+        <title>莆院餐厅</title>
         <link rel="icon" href="./../images/favico.ico">
         <!--不同屏幕尺寸根字体设置-->
         <script src="./../js/base.js"></script>
@@ -21,7 +21,7 @@
         <div id="order" class="app">
             <div class="divHead">
                 <div class="divTitle">
-                    <i class="el-icon-arrow-left" @click="goBack"></i>菩提阁
+                    <i class="el-icon-arrow-left" @click="goBack"></i>莆院餐厅
                 </div>
             </div>
             <div class="divBody" v-if="orderList.length > 0">
@@ -64,7 +64,7 @@
         <!-- 引入组件库 -->
         <script src="../../backend/plugins/element-ui/index.js"></script>
         <!-- 引入vant组件 -->
-        <script src="./../js/vant.min.js"></script>    
+        <script src="./../js/vant.min.js"></script>
         <!-- 引入axios -->
         <script src="../../backend/plugins/axios/axios.min.js"></script>
         <script src="./../js/request.js"></script>
@@ -95,7 +95,7 @@
                     if(url.includes('success')){
                         window.requestAnimationFrame(()=>{
                                 window.location.href= '/front/index.html'
-                        })   
+                        })
                     }else{
                         history.go(-1)
                     }

@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mashang.reggie.entity.SetmealDish;
 import com.mashang.reggie.mapper.SetmealDishMapper;
 import com.mashang.reggie.service.SetmealDishService;
-import com.mashang.reggie.service.SetmealService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 

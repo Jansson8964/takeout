@@ -2,6 +2,7 @@ package com.mashang.reggie.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.mashang.reggie.common.BaseContext;
+import com.mashang.reggie.common.CustomException;
 import com.mashang.reggie.common.R;
 import com.mashang.reggie.entity.ShoppingCart;
 import com.mashang.reggie.service.ShoppingCartService;
@@ -82,9 +83,41 @@ public class ShoppingCartController {
         List<ShoppingCart> list = shoppingCartService.list(lambdaQueryWrapper);
         return R.success(list);
     }
+
     /**
      * 减少购物车
      */
+    @PostMapping("/sub")
+    public R<ShoppingCart> sub(@RequestBody ShoppingCart shoppingCart) {
+        log.info("购物车:{}", shoppingCart);
+        // 设置用户id,查看当前是哪个用户的购物车
+        Long currentId = BaseContext.getCurrentId();
+        shoppingCart.setUserId(currentId);
+        // 查看当前用户的购物车当中是否有菜品或者套餐
+        Long dishId = shoppingCart.getDishId();
+        LambdaQueryWrapper<ShoppingCart> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(ShoppingCart::getUserId, currentId);
+        if (dishId != null) {
+            // 添加到购物车的是菜品
+            lambdaQueryWrapper.eq(ShoppingCart::getDishId, dishId);
+        } else {
+            // 添加到购物车的是套餐
+            lambdaQueryWrapper.eq(ShoppingCart::getSetmealId, shoppingCart.getSetmealId());
+        }
+        ShoppingCart one = shoppingCartService.getOne(lambdaQueryWrapper);
+        if (one != null) {
+            Integer number = one.getNumber();
+            one.setNumber(number - 1);
+            if (number == 1) {
+                //如果购物车的菜品数量减为0，那么就把菜品从购物车删除
+                shoppingCartService.removeById(one.getId());
+            } else if(number < 0){
+                throw new CustomException("菜品数量为0,无法减少");
+            }
+            shoppingCartService.updateById(one);
+        }
+        return R.success(one);
+    }
 
 
     /**
@@ -92,11 +125,8 @@ public class ShoppingCartController {
      */
     @DeleteMapping("/clean")
     public R<String> clean() {
-        // SQL:delete from shopping_cart where user_id = ?
-        LambdaQueryWrapper<ShoppingCart> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.eq(ShoppingCart::getUserId, BaseContext.getCurrentId());
-        shoppingCartService.remove(lambdaQueryWrapper);
-        return R.success("清空购物车成功");
+
+        return shoppingCartService.clean();
 
     }
 }
