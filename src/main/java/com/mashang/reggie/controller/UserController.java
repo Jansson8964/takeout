@@ -27,6 +27,7 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    // 注入redisTemplate对象,用于操作Redis
     @Autowired
     private RedisTemplate redisTemplate;
 
@@ -52,7 +53,7 @@ public class UserController {
             userService.sendMsg(email, subject, context);
             //将验证码保存到session当中
             //session.setAttribute(email, code);
-            // 验证码由保存到session中优化为缓存到redis中,设置验证码的有效时间为5分钟
+            // 将随机产生的四位验证码由保存到session中优化为缓存到redis中,设置验证码的有效时间为5分钟
             redisTemplate.opsForValue().set(email, code, 5, TimeUnit.MINUTES);
             return R.success("验证码发送成功，请及时查看!");
         }
@@ -79,11 +80,12 @@ public class UserController {
         //从Session中获取保存的验证码
         //Object codeInSession = session.getAttribute(phone);
 
-        // 从Redis中获取缓存验证码
-        Object codeInSession = redisTemplate.opsForValue().get(phone);
+        // 1.从Redis中获取缓存验证码
+        // 如果登录成功,则删除redis中的验证码
+        Object codeInRedis = redisTemplate.opsForValue().get(phone);
 
         //进行验证码的比对（页面提交的验证码和Session中保存的验证码比对）
-        if (codeInSession != null && codeInSession.equals(code)) {
+        if (codeInRedis != null && codeInRedis.equals(code)) {
             //如果能够比对成功，说明登录成功
             LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
             queryWrapper.eq(User::getPhone, phone);
@@ -99,6 +101,8 @@ public class UserController {
                 userService.save(user);
             }
             session.setAttribute("user", user.getId());
+            // 如果用户登录成功,这时候redis里的验证码就没用了,直接删除
+            redisTemplate.delete(phone);
             return R.success(user);
         }
         return R.error("登录失败");

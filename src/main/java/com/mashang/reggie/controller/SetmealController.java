@@ -17,9 +17,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -37,6 +42,8 @@ public class SetmealController {
     private CategoryService categoryService;
     @Autowired
     private DishService dishService;
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     /**
      * 保存套餐
@@ -48,8 +55,11 @@ public class SetmealController {
     // 用@RequestBody来接收前端提交的json数据
     public R<String> save(@RequestBody SetmealDto setmealDto) {
         // 新增和修改的返回值一般都是R<String>
+        // @CacheEvict(value = "setmealCache",allEntries = true)
         log.info("接收的参数为:{}", setmealDto);
         setmealService.saveWithDish(setmealDto);
+        Set keys = redisTemplate.keys("dish_*");
+        redisTemplate.delete(keys);
         return R.success("新增套餐成功");
     }
 
@@ -98,6 +108,8 @@ public class SetmealController {
     public R<String> update(@RequestBody SetmealDto setmealDto) {
         log.info(setmealDto.toString());
         setmealService.updateWithDish(setmealDto);
+        Set keys = redisTemplate.keys("dish_*");
+        redisTemplate.delete(keys);
         return R.success("修改套餐成功");
 
     }
@@ -120,6 +132,8 @@ public class SetmealController {
      * @return
      */
     @DeleteMapping
+    // value = "setmealCache" 表示要删除的分类为setmealcache, allEntries = true表示删除该分类下的所有值
+    // @CacheEvict(value = "setmealCache",allEntries = true)
     // 注解@RequestParam接收的参数是来自requestHeader中，即请求头
     public R<String> delete(@RequestParam List<Long> ids) {
         log.info("ids:{}", ids);
@@ -138,13 +152,28 @@ public class SetmealController {
     }
 
     @GetMapping("/list")
+    // 开启缓存注解功能,缓存的名称为setmealCache 缓存的key为
+    // @Cacheable(value = "setmealCache", key = "#setmeal.categoryId+'_'+#setmeal.status")
     public R<List<Setmeal>> list(Setmeal setmeal) {
-        // 构造查询条件
-        LambdaQueryWrapper<Setmeal> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.eq(setmeal.getCategoryId() != null, Setmeal::getCategoryId, setmeal.getCategoryId());
-        lambdaQueryWrapper.eq(Setmeal::getStatus, 1);
-        lambdaQueryWrapper.orderByDesc(Setmeal::getUpdateTime);
-        List<Setmeal> list = setmealService.list(lambdaQueryWrapper);
+        List<Setmeal> list = null;
+        // 动态的构造key
+        String key = "setmeal_" + setmeal.getCategoryId() + "_status_" + setmeal.getStatus();
+        list = (List<Setmeal>) redisTemplate.opsForValue().get(key);
+        if (list != null) {
+            // 如果存在,直接返回,无需查询数据库
+            return R.success(list);
+        } else {
+            // 如果不存在,则需查询数据库
+            // 构造查询条件
+            LambdaQueryWrapper<Setmeal> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+            lambdaQueryWrapper.eq(setmeal.getCategoryId() != null, Setmeal::getCategoryId, setmeal.getCategoryId());
+            lambdaQueryWrapper.eq(Setmeal::getStatus, 1);
+            lambdaQueryWrapper.orderByDesc(Setmeal::getUpdateTime);
+            list = setmealService.list(lambdaQueryWrapper);
+
+        }
+        // 如果不存在,要先把从数据库里查出来的放到redis缓存里!!!!
+        redisTemplate.opsForValue().set(key, list, 60, TimeUnit.MINUTES);
         return R.success(list);
     }
 
